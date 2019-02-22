@@ -52,7 +52,7 @@ module Pod
         output[0].should.match /Mach-O universal binary with 5 architectures/
         output[1].should.match /Mach-O dynamically linked shared library i386/
       end
-      
+
       it "should produce a dSYM when dynamic is specified" do
         Pod::Config.instance.sources_manager.stubs(:search).returns(nil)
 
@@ -176,7 +176,7 @@ module Pod
         # from pod dependency
         symbols.should.include('FIRApp')
       end
-      
+
       it "does not include vendor symbols from pod dependencies if option --exclude-deps is specified" do
         command = Command.parse(%w{ package FirebaseAnalytics --no-mangle --exclude-deps})
         command.run
@@ -278,7 +278,7 @@ module Pod
         command.run
 
         lib = Dir.glob("NikeKit-*/ios/NikeKit.framework/NikeKit").first
-        `lipo #{lib} -verify_arch x86_64 i386 armv7 armv7s arm64`
+        `lipo #{lib} -verify_arch x86_64 i386 armv7 arm64`
         $?.success?.should == true
       end
 
@@ -289,7 +289,7 @@ module Pod
         command.run
 
         lib = Dir.glob("NikeKit-*/ios/NikeKit.framework/NikeKit").first
-        `lipo #{lib} -verify_arch armv7 armv7s arm64`
+        `lipo #{lib} -verify_arch armv7 arm64`
         $?.success?.should == true
       end
 
@@ -303,9 +303,8 @@ module Pod
 
         #Check for __LLVM segment in each device architecture
         `lipo -extract armv7 #{lib} -o armv7.a && otool -l armv7.a`.should.match /__LLVM/
-        `lipo -extract armv7s #{lib} -o armv7s.a && otool -l armv7s.a`.should.match /__LLVM/
         `lipo -extract arm64 #{lib} -o arm64.a && otool -l arm64.a`.should.match /__LLVM/
-        `rm armv7.a armv7s.a arm64.a`
+        `rm armv7.a arm64.a`
       end
 
       it "includes Bitcode for device arch slices when packaging an dynamic iOS Pod" do
@@ -318,9 +317,8 @@ module Pod
 
         #Check for __LLVM segment in each device architecture
         `lipo -extract armv7 #{lib} -o armv7.a && otool -l armv7.a`.should.match /__LLVM/
-        `lipo -extract armv7s #{lib} -o armv7s.a && otool -l armv7s.a`.should.match /__LLVM/
         `lipo -extract arm64 #{lib} -o arm64.a && otool -l arm64.a`.should.match /__LLVM/
-        `rm armv7.a armv7s.a arm64.a`
+        `rm armv7.a arm64.a`
       end
 
       it "does not include Bitcode for simulator arch slices when packaging an iOS Pod" do
@@ -402,7 +400,7 @@ MAP
       it "runs with a spec in the master repository" do
        command = Command.parse(%w{ package KFData })
        command.run
-      
+
        true.should == true  # To make the test pass without any shoulds
       end
     end
