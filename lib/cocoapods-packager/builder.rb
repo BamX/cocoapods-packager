@@ -80,6 +80,8 @@ module Pod
     def build_dynamic_framework
       UI.puts("Building dynamic framework #{@spec} with configuration #{@config}")
 
+      UI.puts("Building dynamic framework: #{@dynamic_sandbox_root.to_s}")
+
       defines = compile
       build_sim_libraries(defines)
 
@@ -111,6 +113,10 @@ module Pod
 
       sim_defines = "#{defines} LIBRARY_SEARCH_PATHS=\"#{Dir.pwd}/#{@static_sandbox_root}/build-sim\" ONLY_ACTIVE_ARCH=NO"
       xcodebuild(sim_defines, '-sdk iphonesimulator', 'build-sim', @spec.name.to_s, @dynamic_sandbox_root.to_s)
+
+      UI.puts("Building dynamic framework: #{@dynamic_sandbox_root.to_s}")
+
+      exit!
 
       # Combine architectures
       `lipo #{@dynamic_sandbox_root}/build/#{@spec.name}.framework/#{@spec.name} #{@dynamic_sandbox_root}/build-sim/#{@spec.name}.framework/#{@spec.name} -create -output #{output}`

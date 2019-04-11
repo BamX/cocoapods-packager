@@ -131,7 +131,7 @@ module Pod
         install_file_references(dynamic_sandbox, [dynamic_target], project)
 
         # 7. Install the target.
-        install_library(dynamic_sandbox, dynamic_target)
+        install_library(dynamic_sandbox, dynamic_target, project)
 
         # 9. Write the actual Xcodeproject to the dynamic sandbox.
         write_pod_project(project, dynamic_sandbox)
@@ -143,9 +143,15 @@ module Pod
         end
         static_target = spec_targets[0]
 
-        dynamic_target = Pod::PodTarget.new(static_target.specs, static_target.target_definitions, dynamic_sandbox)
-        dynamic_target.host_requires_frameworks = true
-        dynamic_target.user_build_configurations = static_target.user_build_configurations
+        dynamic_target = Pod::PodTarget.new(
+          dynamic_sandbox,
+          static_target.host_requires_frameworks,
+          static_target.user_build_configurations,
+          static_target.archs,
+          static_target.platform,
+          static_target.specs,
+          static_target.target_definitions
+        )
         dynamic_target
       end
 
@@ -181,7 +187,16 @@ module Pod
           Sandbox::FileAccessor.new(path_list, spec.consumer(dynamic_target.platform))
         end
 
-        dynamic_target.file_accessors = file_accessors
+        dynamic_target = Pod::PodTarget.new(
+          dynamic_sandbox,
+          dynamic_target.host_requires_frameworks,
+          dynamic_target.user_build_configurations,
+          dynamic_target.archs,
+          dynamic_target.platform,
+          dynamic_target.specs,
+          dynamic_target.target_definitions,
+          file_accessors
+        )
         dynamic_target
       end
 
@@ -190,22 +205,22 @@ module Pod
         installer.install!
       end
 
-      def install_library(dynamic_sandbox, dynamic_target)
+      def install_library(dynamic_sandbox, dynamic_target, pods_project)
         return if dynamic_target.target_definitions.flat_map(&:dependencies).empty?
-        target_installer = Pod::Installer::Xcode::PodsProjectGenerator::PodTargetInstaller.new(dynamic_sandbox, dynamic_target)
-        target_installer.install!
+        target_installer = Pod::Installer::Xcode::PodsProjectGenerator::PodTargetInstaller.new(dynamic_sandbox, pods_project, dynamic_target)
+        installation_result = target_installer.install!
 
         # Installs System Frameworks
         dynamic_target.file_accessors.each do |file_accessor|
           file_accessor.spec_consumer.frameworks.each do |framework|
             if dynamic_target.should_build?
-              dynamic_target.native_target.add_system_framework(framework)
+              installation_result.native_target.add_system_framework(framework)
             end
           end
 
           file_accessor.spec_consumer.libraries.each do |library|
             if dynamic_target.should_build?
-              dynamic_target.native_target.add_system_library(library)
+              installation_result.native_target.add_system_library(library)
             end
           end
         end

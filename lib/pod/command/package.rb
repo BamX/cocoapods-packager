@@ -140,6 +140,8 @@ module Pod
         Pathname.new(work_dir).mkdir
         Dir.chdir(work_dir)
 
+        UI.puts "Working dir: #{work_dir}"
+
         [target_dir, work_dir]
       end
 
