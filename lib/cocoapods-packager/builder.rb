@@ -110,7 +110,7 @@ module Pod
       xcodebuild(device_defines, device_options, 'build', @spec.name.to_s, @dynamic_sandbox_root.to_s)
 
       sim_defines = "#{defines} LIBRARY_SEARCH_PATHS=\"#{Dir.pwd}/#{@static_sandbox_root}/build-sim\" ONLY_ACTIVE_ARCH=NO"
-      xcodebuild(sim_defines, '-sdk iphonesimulator', 'build-sim', @spec.name.to_s, @dynamic_sandbox_root.to_s)
+      xcodebuild(sim_defines, "#{simulator_excluded_arch} -sdk iphonesimulator", 'build-sim', @spec.name.to_s, @dynamic_sandbox_root.to_s)
 
       # Combine architectures
       `lipo #{@dynamic_sandbox_root}/build/#{@spec.name}.framework/#{@spec.name} #{@dynamic_sandbox_root}/build-sim/#{@spec.name}.framework/#{@spec.name} -create -output #{output}`
@@ -136,7 +136,7 @@ module Pod
 
     def build_sim_libraries(defines)
       if @platform.name == :ios
-        xcodebuild(defines, '-sdk iphonesimulator', 'build-sim')
+        xcodebuild(defines, "#{simulator_excluded_arch} -sdk iphonesimulator", 'build-sim')
       end
     end
 
@@ -309,6 +309,10 @@ MAP
         archs = `lipo -info #{library}`.split & archs
       end
       archs
+    end
+
+    def simulator_excluded_arch
+      "EXCLUDED_ARCHS=\'arm64\'"
     end
 
     def xcodebuild(defines = '', args = '', build_dir = 'build', target = 'Pods-packager', project_root = @static_sandbox_root, config = @config)
